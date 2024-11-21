@@ -7,9 +7,9 @@ The evaluation of our stance detection model is based on a combination of metric
 
 ### **1. Accuracy**
 Accuracy measures the fraction of correctly classified instances:
-\[
+$$
 \text{Accuracy} = \frac{\text{Number of Correct Predictions}}{\text{Total Number of Predictions}}
-\]
+$$
 This metric provides an overall view of model performance but can be misleading in imbalanced datasets, which is why additional metrics are included.
 
 ---
