@@ -36,7 +36,7 @@ label2value = {
 }
 
 def predict_label(text):
-    inputs = tokenizer(text.lower(), return_tensors="pt")
+    inputs = tokenizer(text.lower(), return_tensors="pt", max_length=512, truncation=True)
     outputs = model(**inputs)
     predicted_probability = torch.softmax(outputs[0], dim=1)[0].tolist()
     predicted_label = id2label[np.argmax(predicted_probability)]

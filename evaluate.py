@@ -1,71 +1,72 @@
 import numpy as np
 import pandas as pd
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report, confusion_matrix
+from sklearn.metrics import precision_recall_fscore_support, accuracy_score, confusion_matrix
 
 def evaluate_model(y_true, y_pred, labels=None):
     """
-    Evaluate model performance.
-    
+    Evaluate model performance based on gold standard labels and predictions.
+
     Args:
     - y_true: List or numpy array of true labels.
     - y_pred: List or numpy array of predicted labels.
-    - labels: List of label names.
-    
+    - labels: List of class labels (e.g., [-1, 0, 1] for stance detection).
+
     Returns:
     - A dictionary containing evaluation metrics.
     """
     # Accuracy
     accuracy = accuracy_score(y_true, y_pred)
-    
-    # Precision, Recall, F1-Score
-    precision = precision_score(y_true, y_pred, average='weighted', zero_division=0)
-    recall = recall_score(y_true, y_pred, average='weighted', zero_division=0)
-    f1 = f1_score(y_true, y_pred, average='weighted', zero_division=0)
-    
-    # Classification Report
-    report = classification_report(y_true, y_pred, target_names=labels, zero_division=0)
-    
+
+    # Precision, Recall, F1-score
+    precision, recall, f1, _ = precision_recall_fscore_support(
+        y_true, y_pred, labels=labels, average=None, zero_division=0
+    )
+
+    # Macro-average scores
+    macro_precision, macro_recall, macro_f1, _ = precision_recall_fscore_support(
+        y_true, y_pred, labels=labels, average='macro', zero_division=0
+    )
+
     # Confusion Matrix
-    cm = confusion_matrix(y_true, y_pred, labels=range(len(labels)))
-    
+    cm = confusion_matrix(y_true, y_pred, labels=labels)
+
     return {
         'accuracy': accuracy,
-        'precision': precision,
-        'recall': recall,
-        'f1_score': f1,
-        'classification_report': report,
+        'macro_precision': macro_precision,
+        'macro_recall': macro_recall,
+        'macro_f1': macro_f1,
+        'precision_per_class': precision,
+        'recall_per_class': recall,
+        'f1_per_class': f1,
         'confusion_matrix': cm
     }
 
-def display_evaluation_results(results, labels):
+def display_evaluation_results(results, labels, output_file):
     """
-    Display evaluation results in a readable format.
-    
+    Display evaluation results in a readable format and write to a text file.
+
     Args:
     - results: Dictionary of evaluation metrics.
-    - labels: List of label names.
+    - labels: List of class labels.
+    - output_file: Name of the output text file.
     """
-    print("Model Evaluation Metrics")
-    print("-------------------------")
-    print(f"Accuracy: {results['accuracy']:.4f}")
-    print(f"Precision: {results['precision']:.4f}")
-    print(f"Recall: {results['recall']:.4f}")
-    print(f"F1-Score: {results['f1_score']:.4f}\n")
-    
-    print("Classification Report")
-    print(results['classification_report'])
-    
-    print("Confusion Matrix")
-    cm = results['confusion_matrix']
-    df_cm = pd.DataFrame(cm, index=labels, columns=labels)
-    print(df_cm)
+    with open(output_file, 'w') as f:
+        # Write overall metrics
+        f.write("Model Evaluation Metrics\n")
+        f.write("-------------------------\n")
+        f.write(f"Accuracy: {results['accuracy']:.4f}\n")
+        f.write(f"Macro Precision: {results['macro_precision']:.4f}\n")
+        f.write(f"Macro Recall: {results['macro_recall']:.4f}\n")
+        f.write(f"Macro F1-Score: {results['macro_f1']:.4f}\n\n")
 
-# Example usage
-if __name__ == "__main__":
-    # Example: Replace with  true and predicted labels
-    y_true = [0, 1, 0, 1, 2, 2, 1, 0]
-    y_pred = [0, 1, 0, 0, 2, 2, 1, 1]
-    labels = ['Negative', 'Neutral', 'Positive']
-    
-    results = evaluate_model(y_true, y_pred, labels)
-    display_evaluation_results(results, labels)
+        # Write per-class metrics
+        f.write("Per-Class Metrics:\n")
+        for label, precision, recall, f1 in zip(labels, results['precision_per_class'], results['recall_per_class'], results['f1_per_class']):
+            f.write(f"Class {label}: Precision={precision:.4f}, Recall={recall:.4f}, F1-Score={f1:.4f}\n")
+
+        # Write confusion matrix
+        f.write("\nConfusion Matrix:\n")
+        cm = results['confusion_matrix']
+        cm_df = pd.DataFrame(cm, index=labels, columns=labels)
+        f.write(cm_df.to_string())
+        f.write("\n")
