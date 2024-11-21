@@ -28,9 +28,9 @@ $$
 
 ### **3. Recall**
 Recall (also known as Sensitivity) measures the proportion of actual instances of a class that were correctly predicted:
-\[
+$$
 \text{Recall} = \frac{\text{True Positives}}{\text{True Positives} + \text{False Negatives}}
-\]
+$$
 
 ---
 
