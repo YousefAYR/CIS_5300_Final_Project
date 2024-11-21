@@ -28,6 +28,7 @@ $$
 
 ### **3. Recall**
 Recall (also known as Sensitivity) measures the proportion of actual instances of a class that were correctly predicted:
+
 $$
 \text{Recall} = \frac{\text{True Positives}}{\text{True Positives} + \text{False Negatives}}
 $$
@@ -36,6 +37,7 @@ $$
 
 ### **4. F1-Score**
 F1-Score is the harmonic mean of Precision and Recall, balancing their trade-off:
+
 \[
 \text{F1-Score} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}
 \]
