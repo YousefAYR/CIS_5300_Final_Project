@@ -28,26 +28,30 @@ $$
 
 ### **3. Recall**
 Recall (also known as Sensitivity) measures the proportion of actual instances of a class that were correctly predicted:
-\[
+
+$$
 \text{Recall} = \frac{\text{True Positives}}{\text{True Positives} + \text{False Negatives}}
-\]
+$$
 
 ---
 
 ### **4. F1-Score**
 F1-Score is the harmonic mean of Precision and Recall, balancing their trade-off:
-\[
+
+$$
 \text{F1-Score} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}
-\]
+$$
 
 ---
 
 ### **5. Macro-Averaged Metrics**
 Macro-averaging ensures that all classes are treated equally, regardless of their frequency in the dataset. For Precision, Recall, and F1-Score, the macro-average is calculated as:
-\[
+
+$$
 \text{Macro Metric} = \frac{1}{N} \sum_{i=1}^N \text{Metric for Class } i
-\]
-Where \(N\) is the number of classes.
+$$
+
+Where $N$ is the number of classes.
 
 This averaging method is particularly useful in imbalanced datasets, as it prevents the performance on majority classes from overshadowing the minority classes.
 
@@ -58,7 +62,7 @@ The confusion matrix provides a detailed breakdown of the model's predictions co
 - Rows represent the true class labels.
 - Columns represent the predicted class labels.
 
-Each cell \((i, j)\) indicates the number of instances with true label \(i\) predicted as \(j\).
+Each cell $(i , j)$ indicates the number of instances with true label \(i\) predicted as \(j\).
 
 ---
 
