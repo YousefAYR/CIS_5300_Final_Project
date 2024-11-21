@@ -16,9 +16,10 @@ This metric provides an overall view of model performance but can be misleading 
 
 ### **2. Precision**
 Precision measures the proportion of correctly predicted instances for each class relative to all predictions for that class:
-\[
+
+$$
 \text{Precision} = \frac{\text{True Positives}}{\text{True Positives} + \text{False Positives}}
-\]
+$$
 
 ---
 
