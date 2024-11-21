@@ -1,5 +1,6 @@
 import numpy as np
-from sklearn.metrics import precision_recall_fscore_support, accuracy_score, classification_report, confusion_matrix
+import pandas as pd
+from sklearn.metrics import precision_recall_fscore_support, accuracy_score, confusion_matrix
 
 def evaluate_model(y_true, y_pred, labels=None):
     """
@@ -40,26 +41,32 @@ def evaluate_model(y_true, y_pred, labels=None):
         'confusion_matrix': cm
     }
 
-def display_evaluation_results(results, labels):
+def display_evaluation_results(results, labels, output_file):
     """
-    Display evaluation results in a readable format.
+    Display evaluation results in a readable format and write to a text file.
 
     Args:
     - results: Dictionary of evaluation metrics.
     - labels: List of class labels.
+    - output_file: Name of the output text file.
     """
-    print("Model Evaluation Metrics")
-    print("-------------------------")
-    print(f"Accuracy: {results['accuracy']:.4f}")
-    print(f"Macro Precision: {results['macro_precision']:.4f}")
-    print(f"Macro Recall: {results['macro_recall']:.4f}")
-    print(f"Macro F1-Score: {results['macro_f1']:.4f}\n")
+    with open(output_file, 'w') as f:
+        # Write overall metrics
+        f.write("Model Evaluation Metrics\n")
+        f.write("-------------------------\n")
+        f.write(f"Accuracy: {results['accuracy']:.4f}\n")
+        f.write(f"Macro Precision: {results['macro_precision']:.4f}\n")
+        f.write(f"Macro Recall: {results['macro_recall']:.4f}\n")
+        f.write(f"Macro F1-Score: {results['macro_f1']:.4f}\n\n")
 
-    print("Per-Class Metrics:")
-    for label, precision, recall, f1 in zip(labels, results['precision_per_class'], results['recall_per_class'], results['f1_per_class']):
-        print(f"Class {label}: Precision={precision:.4f}, Recall={recall:.4f}, F1-Score={f1:.4f}")
+        # Write per-class metrics
+        f.write("Per-Class Metrics:\n")
+        for label, precision, recall, f1 in zip(labels, results['precision_per_class'], results['recall_per_class'], results['f1_per_class']):
+            f.write(f"Class {label}: Precision={precision:.4f}, Recall={recall:.4f}, F1-Score={f1:.4f}\n")
 
-    print("\nConfusion Matrix:")
-    cm = results['confusion_matrix']
-    cm_df = pd.DataFrame(cm, index=labels, columns=labels)
-    print(cm_df)
+        # Write confusion matrix
+        f.write("\nConfusion Matrix:\n")
+        cm = results['confusion_matrix']
+        cm_df = pd.DataFrame(cm, index=labels, columns=labels)
+        f.write(cm_df.to_string())
+        f.write("\n")
