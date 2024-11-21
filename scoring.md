@@ -73,4 +73,4 @@ Each cell \((i, j)\) indicates the number of instances with true label \(i\) pre
    Link: [F1-Score - Wikipedia](https://en.wikipedia.org/wiki/F1_score)
 
 3. Overview of Macro-Averaging in Text Classification  
-   Link: [Text Classification Metrics - Macro vs Micro](https://medium.com/@AIResearchLab/macro-and-micro-averaging-metrics-for-text-classification-d91b1f4e7063)
+   Link: [Text Classification Metrics - Macro vs Micro](https://medium.com/@ehudkr/a-visual-way-to-think-on-macro-and-micro-averages-in-classification-metrics-190285dc927f)
