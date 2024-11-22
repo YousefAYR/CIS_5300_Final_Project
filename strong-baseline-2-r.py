@@ -2,11 +2,14 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchtext.data.utils import get_tokenizer
-from torchtext.vocab import build_vocab_from_iterator
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, Dataset
+from collections import Counter
+import nltk
+from nltk.tokenize import word_tokenize
 import evaluate
+
+nltk.download('punkt')
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -38,11 +41,12 @@ class SentimentClassifier(nn.Module):
         return logits
 
 class TextDataset(Dataset):
-    def __init__(self, dataframe, tokenizer, vocab):
+    def __init__(self, dataframe, tokenizer, vocab, max_length):
         self.texts = dataframe['text'].tolist()
         self.labels = dataframe['stance'].tolist()
         self.tokenizer = tokenizer
         self.vocab = vocab
+        self.max_length = max_length
 
     def __len__(self):
         return len(self.texts)
@@ -50,24 +54,42 @@ class TextDataset(Dataset):
     def __getitem__(self, idx):
         text = self.texts[idx]
         label = self.labels[idx]
-        tokenized_text = torch.tensor(self.vocab(self.tokenizer(text)), dtype=torch.long)
-        return tokenized_text, label
+        tokenized_text = [
+            self.vocab.get(token, self.vocab["<unk>"]) for token in self.tokenizer(text)
+        ]
+        if len(tokenized_text) > self.max_length:
+            tokenized_text = tokenized_text[:self.max_length]
+        return torch.tensor(tokenized_text, dtype=torch.long), label
+    
+def build_vocab(texts, tokenizer, specials=["<unk>", "<pad>"]):
+    counter = Counter()
+    for text in texts:
+        tokens = tokenizer(text)
+        counter.update(tokens)
+    vocab = {word: idx + len(specials) for idx, (word, _) in enumerate(counter.items())}
+    for idx, special in enumerate(specials):
+        vocab[special] = idx
+    return vocab
 
-tokenizer = get_tokenizer("basic_english")
+def collate_fn(batch):
+    texts, labels = zip(*batch)
+    padded_texts = pad_sequence(texts, batch_first=True, padding_value=vocab["<pad>"])
+    labels = torch.tensor(labels, dtype=torch.long)
+    return padded_texts, labels
+
+
 
 tweet_path = 'data/labeled_tweets_georgetown/'
 reddit_path = 'data/factoid_reddit/'
 
-df_train = pd.read_csv(reddit_path + 'train.csv', on_bad_lines='skip')
-df_dev = pd.read_csv(reddit_path + 'dev.csv', on_bad_lines='skip')
-df_test = pd.read_csv(reddit_path + 'test.csv', on_bad_lines='skip')
 
-def yield_tokens(data_iter):
-    for text in data_iter:
-        yield tokenizer(text)
+df_train = pd.read_csv(reddit_path + 'train.csv', lineterminator='\n', on_bad_lines='skip')
+df_dev = pd.read_csv(reddit_path + 'dev.csv', lineterminator='\n', on_bad_lines='skip')
+df_test = pd.read_csv(reddit_path + 'test.csv', lineterminator='\n', on_bad_lines='skip')
 
-vocab = build_vocab_from_iterator(yield_tokens(df_train['text'].tolist()), specials=["<unk>", "<pad>"])
-vocab.set_default_index(vocab["<unk>"])
+tokenizer = word_tokenize
+vocab = build_vocab(df_train['text'].tolist(), tokenizer)
+vocab_size = len(vocab)
 
 vocab_size = len(vocab)
 embedding_dim = 128
