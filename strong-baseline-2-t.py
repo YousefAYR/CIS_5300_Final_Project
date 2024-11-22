@@ -43,7 +43,7 @@ class SentimentClassifier(nn.Module):
 class TextDataset(Dataset):
     def __init__(self, dataframe, tokenizer, vocab, max_length):
         self.texts = dataframe['text'].tolist()
-        self.labels = dataframe['stance'].tolist()
+        self.labels = dataframe['stance'].map({-1: 0, 0: 1, 1: 2}).tolist()        
         self.tokenizer = tokenizer
         self.vocab = vocab
         self.max_length = max_length
@@ -83,9 +83,9 @@ tweet_path = 'data/labeled_tweets_georgetown/'
 reddit_path = 'data/factoid_reddit/'
 
 
-df_train = pd.read_csv(tweet_path + 'train.csv', on_bad_lines='skip')
-df_dev = pd.read_csv(tweet_path + 'dev.csv', on_bad_lines='skip')
-df_test = pd.read_csv(tweet_path + 'test.csv', on_bad_lines='skip')
+df_train = pd.read_csv(reddit_path + 'train.csv', lineterminator='\n', on_bad_lines='skip')
+df_dev = pd.read_csv(reddit_path + 'dev.csv', lineterminator='\n', on_bad_lines='skip')
+df_test = pd.read_csv(reddit_path + 'test.csv', lineterminator='\n', on_bad_lines='skip')
 
 tokenizer = word_tokenize
 vocab = build_vocab(df_train['text'].tolist(), tokenizer)
@@ -113,9 +113,9 @@ def collate_fn(batch):
 
 
 
-train_dataset = TextDataset(df_train, tokenizer, vocab)
-dev_dataset = TextDataset(df_dev, tokenizer, vocab)
-test_dataset = TextDataset(df_test, tokenizer, vocab)
+train_dataset = TextDataset(df_train, tokenizer, vocab, max_length)
+dev_dataset = TextDataset(df_dev, tokenizer, vocab, max_length)
+test_dataset = TextDataset(df_test, tokenizer, vocab, max_length)
 
 batch_size = 128
 train_loader = DataLoader(train_dataset, batch_size=batch_size, collate_fn=collate_fn, shuffle=True)
@@ -170,20 +170,23 @@ def train_model(model, train_loader, dev_loader, learning_rates, num_epochs=10):
     return best_lr
 
 
-model.load_state_dict(torch.load("best_model.pth"))
+train_model(model, train_loader, dev_loader, learning_rates)
+
 def predict_on_test(model, data_loader):
     model.eval()
     predictions = []
-    true_labels = []
     with torch.no_grad():
         for batch_texts, batch_labels in data_loader:
             outputs = model(batch_texts)
             predicted_labels = torch.argmax(outputs, dim=1)
             predictions.extend(predicted_labels.tolist())
-            true_labels.extend(batch_labels.tolist())
-    return true_labels, predictions
+    return data_loader['stance'].to_list(), predictions
 
 y_true, y_pred = predict_on_test(model, test_loader)
+
+mapped_labels = {0: -1, 1: 0, 2: 1}
+y_pred = [mapped_labels[label] for label in y_pred]
+y_true = [mapped_labels[label] for label in y_true]
 
 labels = ['left-leaning', 'center', 'right-leaning']
 results = evaluate.evaluate_model(y_true, y_pred, labels)
