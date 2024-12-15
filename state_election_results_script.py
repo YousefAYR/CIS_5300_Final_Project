@@ -17,7 +17,7 @@ total_state_votes = state_votes.groupby('state')['total_votes'].sum().reset_inde
 state_results = pd.merge(state_winners, total_state_votes, on='state', suffixes=('_winner', '_total'))
 
 # Save the state election results to a CSV file
-output_file_path = 'state_election_results.csv'  # Replace with your desired output path
+output_file_path = 'results/state_election_results.csv'  # Replace with your desired output path
 state_results.to_csv(output_file_path, index=False)
 
 print(f'Results saved to {output_file_path}')
