@@ -9,6 +9,7 @@ def to_ascii(text):
     return ''.join(i for i in text if ord(i) < 128)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("cuda" if torch.cuda.is_available() else "cpu")
 pretrained_LM_path = "kornosk/bert-election2020-twitter-stance-trump-KE-MLM"
 
 tokenizer = AutoTokenizer.from_pretrained(pretrained_LM_path)
@@ -48,6 +49,6 @@ df_r_test["pred"] = df_r_test["text"].apply(predict_label)
 labels = ['left-leaning', 'center', 'right-leaning']
 
 res_t = evaluate_model(df_t_test['stance'], df_t_test["pred"], labels)
-res_r = evaluate_model(df_r_test['stance'], df_r_test["pred"], labels)
 display_evaluation_results(res_t, labels, 'tweet-strong-eval.txt')
+res_r = evaluate_model(df_r_test['stance'], df_r_test["pred"], labels)
 display_evaluation_results(res_r, labels, 'reddit-strong-eval.txt')
