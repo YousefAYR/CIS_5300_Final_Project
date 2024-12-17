@@ -88,6 +88,9 @@ df_dev = pd.read_csv(reddit_path + 'dev.csv', lineterminator='\n', on_bad_lines=
 df_test = pd.read_csv(reddit_path + 'test.csv', lineterminator='\n', on_bad_lines='skip')
 
 tokenizer = word_tokenize
+df_train['text'] = df_train['text'].astype(str)
+df_test['text'] = df_test['text'].astype(str)
+df_dev['text'] = df_dev['text'].astype(str)
 vocab = build_vocab(df_train['text'].tolist(), tokenizer)
 vocab_size = len(vocab)
 
@@ -98,18 +101,18 @@ num_classes = 3
 max_length = 512
 learning_rates = [0.01]
 
-def text_pipeline(text):
-    tokenized = vocab(tokenizer(text))
-    if len(tokenized) > max_length:
-        tokenized = tokenized[:max_length]
-    return tokenized
-
-def collate_fn(batch):
-    texts, labels = zip(*batch)
-    texts = [torch.tensor(text_pipeline(text), dtype=torch.long) for text in texts]
-    padded_texts = pad_sequence(texts, batch_first=True, padding_value=vocab["<pad>"])
-    labels = torch.tensor(labels, dtype=torch.long)
-    return padded_texts, labels
+#def text_pipeline(text):
+#    tokenized = vocab(tokenizer(text))
+#    if len(tokenized) > max_length:
+#        tokenized = tokenized[:max_length]
+#    return tokenized
+#
+#def collate_fn(batch):
+#    texts, labels = zip(*batch)
+#    texts = [torch.tensor(text_pipeline(text), dtype=torch.long) for text in texts]
+#    padded_texts = pad_sequence(texts, batch_first=True, padding_value=vocab["<pad>"])
+#    labels = torch.tensor(labels, dtype=torch.long)
+#    return padded_texts, labels
 
 
 
@@ -123,6 +126,7 @@ dev_loader = DataLoader(dev_dataset, batch_size=batch_size, collate_fn=collate_f
 test_loader = DataLoader(test_dataset, batch_size=batch_size, collate_fn=collate_fn)
 
 model = SentimentClassifier(vocab_size, embedding_dim, hidden_dim, num_classes)
+model = model.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 criterion = nn.CrossEntropyLoss()
 
@@ -131,6 +135,7 @@ def evaluate_model(model, data_loader, criterion):
     total_loss = 0
     with torch.no_grad():
         for batch_texts, batch_labels in data_loader:
+            batch_texts, batch_labels = batch_texts.to(device), batch_labels.to(device)
             outputs = model(batch_texts)
             loss = criterion(outputs, batch_labels)
             total_loss += loss.item()
@@ -149,6 +154,7 @@ def train_model(model, train_loader, dev_loader, learning_rates, num_epochs=10):
             model.train()
             epoch_loss = 0
             for batch_texts, batch_labels in train_loader:
+                batch_texts, batch_labels = batch_texts.to(device), batch_labels.to(device)
                 optimizer.zero_grad()
                 outputs = model(batch_texts)
                 loss = criterion(outputs, batch_labels)
@@ -176,7 +182,8 @@ def predict_on_test(model, data_loader):
     model.eval()
     predictions = []
     with torch.no_grad():
-        for batch_texts, batch_labels in data_loader:
+        for batch_texts, _ in data_loader:
+            batch_texts = batch_texts.to(device)
             outputs = model(batch_texts)
             predicted_labels = torch.argmax(outputs, dim=1)
             predictions.extend(predicted_labels.tolist())
